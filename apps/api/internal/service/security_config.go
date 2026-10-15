@@ -15,13 +15,9 @@ func ValidateSecurityConfig() error {
 	}
 	env := os.Getenv("ENV")
 	production := env != "development" && env != "test"
-	if production && strings.TrimSpace(os.Getenv("SMTP_HOST")) == "" && strings.TrimSpace(os.Getenv("RESEND_API_KEY")) == "" {
-		return fmt.Errorf("SMTP_HOST or RESEND_API_KEY is required outside development/test")
-	}
+	// CORS is only needed when the browser calls the API from another origin;
+	// the bundled web app proxies /api on the same origin.
 	origins := strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGINS"))
-	if production && origins == "" {
-		return fmt.Errorf("CORS_ALLOWED_ORIGINS is required outside development/test")
-	}
 	for _, origin := range strings.Split(origins, ",") {
 		origin = strings.TrimSpace(origin)
 		if origin == "" {

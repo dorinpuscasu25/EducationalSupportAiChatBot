@@ -20,7 +20,7 @@ func TestSecurityConfigurationFailsClosed(t *testing.T) {
 		}
 	}
 	t.Setenv("JWT_SECRET", strings.Repeat("x", 40))
-	for _, origin := range []string{"", "*", "http://academie.example.com", "https://academie.example.com/path", "https://*.example.com"} {
+	for _, origin := range []string{"*", "http://academie.example.com", "https://academie.example.com/path", "https://*.example.com"} {
 		t.Setenv("CORS_ALLOWED_ORIGINS", origin)
 		if ValidateSecurityConfig() == nil {
 			t.Fatalf("accepted origin %q", origin)

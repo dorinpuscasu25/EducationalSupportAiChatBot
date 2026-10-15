@@ -37,6 +37,9 @@ func main() {
 	if env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+	if env != "development" && env != "test" && !service.EmailConfigured() {
+		logger.Warn("No email provider (RESEND_API_KEY or SMTP_HOST): verification and reset codes are only written to the API log")
+	}
 
 	embedder := knowledge.NewEmbedderFromEnv()
 	db, err := database.SetupDB(embedder.Dim())

@@ -21,6 +21,11 @@ import (
 
 const resendEndpoint = "https://api.resend.com/emails"
 
+// EmailConfigured reports whether a real mail provider is set up.
+func EmailConfigured() bool {
+	return strings.TrimSpace(os.Getenv("RESEND_API_KEY")) != "" || strings.TrimSpace(os.Getenv("SMTP_HOST")) != ""
+}
+
 // EmailService sends transactional mail. It prefers Resend when an API key is
 // present, falls back to SMTP, and in development logs the message so a code
 // can still be read without any provider configured.
@@ -119,11 +124,9 @@ func greeting(name string) string {
 }
 
 func (s *EmailService) send(to, subject string, content emailContent) error {
-	// Dev fallback: no provider configured → log it so the code is still usable.
+	// No provider configured: log the message so a code can still be read from
+	// the server logs (main warns about this at startup outside development).
 	if s.resendKey == "" && s.host == "" {
-		if os.Getenv("ENV") != "development" && os.Getenv("ENV") != "test" {
-			return fmt.Errorf("RESEND_API_KEY or SMTP_HOST is required outside development/test")
-		}
 		logger.Info("email_dev_fallback",
 			zap.String("to", to),
 			zap.String("subject", subject),
