@@ -1,0 +1,25 @@
+.composer {
+  background: var(--foreground);
+  border-color: #363636;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.composer:focus-within {
+  border-color: var(--subtle);
+  box-shadow:
+    0 0 0 1px #ffffff26,
+    0 0 24px #ffffff08;
+}
+
+/* The entire composer owns the focus ring, including its toolbar. */
+.composer .input[contenteditable]:focus-visible {
+  outline: none;
+}
+
+.input[contenteditable]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  pointer-events: none;
+}

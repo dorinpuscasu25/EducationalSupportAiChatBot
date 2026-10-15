@@ -1,0 +1,68 @@
+# Asistent Academie: PostgreSQL (with pgvector), the Go API and the web app.
+#   docker compose up -d --build     → http://localhost:${WEB_PORT:-8080}
+name: educational-support
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-academy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-academy}
+      POSTGRES_DB: ${POSTGRES_DB:-academy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Only on this machine, for `make api-dev` and database tools.
+      - "127.0.0.1:${DB_LOCAL_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-academy} -d ${POSTGRES_DB:-academy}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER:-academy}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-academy}
+      DB_NAME: ${POSTGRES_DB:-academy}
+      DB_SSLMODE: disable
+      DB_TIMEZONE: Europe/Chisinau
+      TZ: Europe/Chisinau
+      DOCUMENTS_DIR: /documents
+    volumes:
+      # The course materials, read-only: drop files into ./documents.
+      - ./documents:/documents:ro
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/readiness"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        VITE_API_URL: /api
+        VITE_APP_NAME: ${APP_NAME:-Asistent Academie}
+        VITE_ACADEMY_NAME: ${ACADEMY_NAME:-Academia}
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  uploads:

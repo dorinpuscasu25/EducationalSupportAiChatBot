@@ -1,0 +1,139 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  color-scheme: dark;
+  /* Surfaces, darkest to lightest. */
+  --background-dark: #000000;
+  --background: #080808;
+  --foreground: #111111;
+  --overlay: #161616;
+  --pop: #202020;
+  /* Lines. */
+  --border: #292929;
+  --divider: #333333;
+  /* Text and marks, lightest to darkest. The product is deliberately
+     achromatic: state is carried by wording and contrast, never by hue. */
+  --primary: #ffffff;
+  --accent: #ededed;
+  --soft: #e5e5e5;
+  --highlight: #d4d4d4;
+  --secondary: #c7c7c7;
+  --subtle: #a3a3a3;
+  --muted: #a1a1a1;
+  --dim: #737373;
+  /* Focus indicator: brighter than a resting border, well short of white. */
+  --focus: #5c5c5c;
+  --danger: #ededed;
+  --success: #e5e5e5;
+}
+
+body {
+  color: #ededed;
+  /* The rings artwork was drawn behind the whole app, so its strokes and
+     sparkles crossed the answer text. Legal answers are read closely; nothing
+     should compete with them. */
+  background-color: var(--background);
+  font-family: Inter, sans-serif;
+}
+/* Keyboard focus must stay visible, but a near-white ring reads as an error
+   state on this dark surface. Thin and dim is enough. */
+:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Form fields already draw their own border, so an outline around it shows two
+   rings. Brighten the border the field already has instead. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+}
+/* Safari on iOS zooms the whole page when a focused field's text is under 16px,
+   and never zooms back out. Lifting the size on touch devices stops that without
+   touching the viewport meta — capping user-scalable would also block pinch-zoom,
+   which people rely on. Desktop keeps its denser sizes.
+
+   !important is deliberate: these override Tailwind's text-sm/text-xs utilities,
+   which are more specific than a bare element selector. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@theme {
+  --font-display: "Inter", sans-serif;
+  --color-background-dark: var(--background-dark);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-overlay: var(--overlay);
+  --color-pop: var(--pop);
+  --color-border: var(--border);
+  --color-divider: var(--divider);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-soft: var(--soft);
+  --color-highlight: var(--highlight);
+  --color-secondary: var(--secondary);
+  --color-subtle: var(--subtle);
+  --color-muted: var(--muted);
+  --color-dim: var(--dim);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+}
+
+img {
+  user-select: none;
+}
+
+.text-gradient {
+  @apply to-muted from-primary bg-linear-to-r bg-clip-text text-transparent;
+}
+
+.text-gradient-center {
+  @apply from-muted to-muted via-primary animate-pulse bg-linear-to-r bg-clip-text bg-no-repeat text-transparent;
+
+  background-size: 200% 100%;
+  animation: bg-pulse 8s ease-in-out infinite;
+}
+
+/* The primary action surface (Button variant="primary"). */
+.bg-action {
+  background: var(--pop);
+  border: 1px solid #484848;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.bg-action:hover:not(:disabled) {
+  background: #2b2b2b;
+  border-color: #888888;
+}
+
+@keyframes bg-pulse {
+  0%,
+  100% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: 0% 0;
+  }
+}

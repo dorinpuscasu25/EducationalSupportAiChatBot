@@ -1,0 +1,10 @@
+.env
+.DS_Store
+node_modules
+dist
+apps/api/uploads
+apps/api/.env
+apps/web/.env
+# Course materials stay out of git; only the folder's README is tracked.
+documents/*
+!documents/README.md
