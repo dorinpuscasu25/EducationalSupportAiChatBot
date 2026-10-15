@@ -1,19 +1,25 @@
 import { ExportConversationsButton } from "@pages/Admin/ExportConversationsButton";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { UserStatus } from "@api/auth/response";
-import { AdminUsersPage } from "@components/page/AdminUsersPage";
+import {
+  AdminUsersPage,
+  type UsersFilter,
+} from "@components/page/AdminUsersPage";
 import { useAdminUsers } from "@apiQuery/query/admin";
-import { useCreateUser } from "@apiQuery/mutation/admin";
+import { useCreateUser, useSetUserRole } from "@apiQuery/mutation/admin";
 import { AdminRoutes } from "@config/routes";
 import { errorMessage } from "@utils/errors";
 import { loadFailure } from "../load-failure";
 
 export const AdminUsersContainer = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<UserStatus | "">("");
-  const users = useAdminUsers(status || undefined);
+  const [status, setStatus] = useState<UsersFilter>("");
+  // "admins" is filtered on the page; the server filters by status only.
+  const users = useAdminUsers(
+    status && status !== "admins" ? status : undefined,
+  );
   const createUser = useCreateUser();
+  const setRole = useSetUserRole();
 
   return (
     <AdminUsersPage
@@ -23,6 +29,21 @@ export const AdminUsersContainer = () => {
       loadFailure={loadFailure(users)}
       status={status}
       onStatusChange={setStatus}
+      onSetRole={(id, role) =>
+        setRole.mutate(
+          { id, role },
+          {
+            onError: (error) =>
+              window.alert(
+                errorMessage(
+                  error,
+                  "Nu am putut schimba rolul utilizatorului.",
+                ),
+              ),
+          },
+        )
+      }
+      roleChanging={setRole.isPending ? setRole.variables?.id : undefined}
       onOpenUser={(userId) =>
         navigate({ to: AdminRoutes.UserDetail, params: { userId } })
       }

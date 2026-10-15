@@ -47,14 +47,14 @@ export const AdminOverviewPage: FC<Props> = ({
   <>
     <PageHeader
       title="Prezentare generală"
-      subtitle="Cursanți, aprobări și activitate"
+      subtitle="Utilizatori, aprobări și activitate"
     />
     {loadFailure ? (
       <ErrorState {...loadFailure} />
     ) : (
       <div className="p-8">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat label="Total cursanți" value={m?.total_users} />
+          <Stat label="Total utilizatori" value={m?.total_users} />
           <Stat
             label="În așteptare"
             value={m?.pending_users}

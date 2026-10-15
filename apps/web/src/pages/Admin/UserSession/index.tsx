@@ -42,7 +42,7 @@ export function UserSessionPage({
             }
             className="text-muted flex items-center gap-2 text-sm hover:text-white"
           >
-            <LuArrowLeft className="size-4" /> Cursant
+            <LuArrowLeft className="size-4" /> Utilizator
           </button>
         }
       />

@@ -2,7 +2,7 @@ import { useMemo, useState, type FC, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { CreateUserPayload } from "@api/admin";
 import type { UserListItem } from "@api/admin/response";
-import type { UserStatus } from "@api/auth/response";
+import type { UserRole, UserStatus } from "@api/auth/response";
 import { Button } from "@components/core/Button";
 import { Control } from "@components/core/Control";
 import { Card } from "@components/display/Card";
@@ -14,11 +14,14 @@ import { AdminRoutes } from "@config/routes";
 import { formatDate, formatNumber } from "@utils/format";
 import { CreateUserForm } from "./CreateUserForm";
 
-const FILTERS: { key: UserStatus | ""; label: string }[] = [
+export type UsersFilter = UserStatus | "" | "admins";
+
+const FILTERS: { key: UsersFilter; label: string }[] = [
   { key: "", label: "Toți" },
   { key: "pending", label: "În așteptare" },
   { key: "active", label: "Activi" },
   { key: "suspended", label: "Suspendați" },
+  { key: "admins", label: "Administratori" },
 ];
 
 const PAGE_SIZE = 15;
@@ -29,9 +32,13 @@ type Props = {
   loading?: boolean;
   /** The list could not load (C3): shown in place of the table. */
   loadFailure?: { message: string; onRetry: () => void };
-  /** Server-side status filter; "" lists everyone. */
-  status: UserStatus | "";
-  onStatusChange: (status: UserStatus | "") => void;
+  /** Status filter ("" lists everyone, "admins" only administrators). */
+  status: UsersFilter;
+  onStatusChange: (status: UsersFilter) => void;
+  /** Make a user an administrator, or back a regular user. */
+  onSetRole?: (userId: string, role: UserRole) => void;
+  /** The user whose role change is in flight. */
+  roleChanging?: string;
   onOpenUser: (userId: string) => void;
   onCreateUser: (payload: CreateUserPayload) => Promise<unknown>;
   /** The create form opened or closed: its last outcome no longer applies. */
@@ -47,6 +54,8 @@ export const AdminUsersPage: FC<Props> = ({
   status,
   onStatusChange,
   onOpenUser,
+  onSetRole,
+  roleChanging,
   onCreateUser,
   onCreateToggle,
   createError,
@@ -57,12 +66,14 @@ export const AdminUsersPage: FC<Props> = ({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const list = users ?? [];
+    const list = (users ?? []).filter(
+      (u) => status !== "admins" || u.role === "admin",
+    );
     if (!q) return list;
     return list.filter((u) =>
       `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(q),
     );
-  }, [users, search]);
+  }, [users, search, status]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -74,7 +85,7 @@ export const AdminUsersPage: FC<Props> = ({
   return (
     <>
       <PageHeader
-        title="Cursanți"
+        title="Users"
         subtitle={
           loadFailure ? undefined : `${formatNumber(filtered.length)} rezultate`
         }
@@ -87,7 +98,7 @@ export const AdminUsersPage: FC<Props> = ({
                 onCreateToggle();
               }}
             >
-              {showCreate ? "Închide" : "+ Adaugă cursant"}
+              {showCreate ? "Închide" : "+ Adaugă utilizator"}
             </Button>
           </div>
         }
@@ -141,26 +152,31 @@ export const AdminUsersPage: FC<Props> = ({
               <Table.Root>
                 <Table.Head
                   columns={[
-                    "Cursant",
+                    "Utilizator",
                     "Rol",
                     "Status",
                     "Pachet",
                     "Sesiuni",
                     "Consum lună",
+                    "",
                   ]}
                 />
                 <Table.Body>
                   {loading && (
-                    <Table.Message colSpan={6}>Se încarcă…</Table.Message>
+                    <Table.Message colSpan={7}>Se încarcă…</Table.Message>
                   )}
                   {!loading && rows.length === 0 && (
-                    <Table.Message colSpan={6}>Niciun cursant.</Table.Message>
+                    <Table.Message colSpan={7}>
+                      Niciun utilizator.
+                    </Table.Message>
                   )}
                   {rows.map((u) => (
                     <UserRow
                       key={u.id}
                       user={u}
                       onClick={() => onOpenUser(u.id)}
+                      onSetRole={onSetRole}
+                      roleChanging={roleChanging === u.id}
                     />
                   ))}
                 </Table.Body>
@@ -195,10 +211,13 @@ export const AdminUsersPage: FC<Props> = ({
   );
 };
 
-const UserRow: FC<{ user: UserListItem; onClick: () => void }> = ({
-  user,
-  onClick,
-}) => {
+const UserRow: FC<{
+  user: UserListItem;
+  onClick: () => void;
+  onSetRole?: (userId: string, role: UserRole) => void;
+  roleChanging?: boolean;
+}> = ({ user, onClick, onSetRole, roleChanging }) => {
+  const isAdmin = user.role === "admin";
   const limit = user.quota?.monthly_token_limit ?? 0;
   const used = user.quota?.tokens_used ?? 0;
   return (
@@ -250,6 +269,31 @@ const UserRow: FC<{ user: UserListItem; onClick: () => void }> = ({
           : used
             ? `${formatNumber(used)} / ∞`
             : "—"}
+      </td>
+      <td className="px-5 py-3 text-right">
+        {onSetRole && (
+          <Button
+            variant="ghost"
+            className="px-2.5 py-1 text-xs whitespace-nowrap"
+            disabled={roleChanging}
+            aria-label={
+              isAdmin
+                ? `Scoate rolul admin pentru ${user.email}`
+                : `Fă admin pe ${user.email}`
+            }
+            onClick={(event) => {
+              event.stopPropagation();
+              const question = isAdmin
+                ? `Scoți rolul de administrator pentru ${user.email}?`
+                : `Faci administrator pe ${user.email}? Va avea acces la tot panoul de admin.`;
+              if (window.confirm(question)) {
+                onSetRole(user.id, isAdmin ? "user" : "admin");
+              }
+            }}
+          >
+            {isAdmin ? "Scoate admin" : "Fă admin"}
+          </Button>
+        )}
       </td>
     </tr>
   );

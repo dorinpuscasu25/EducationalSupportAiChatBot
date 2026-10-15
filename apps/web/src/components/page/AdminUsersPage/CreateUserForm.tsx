@@ -30,7 +30,7 @@ export const CreateUserForm: FC<{
     <Card
       theme="subtle"
       spacing="md"
-      title="Cursant nou (cont activ)"
+      title="Utilizator nou (cont activ)"
       className="mb-4"
     >
       <Alert className="mb-3">{error}</Alert>
@@ -99,7 +99,7 @@ export const CreateUserForm: FC<{
               aria-label="Rol"
               options={[
                 { value: "user", label: "Cursant" },
-                { value: "admin", label: "Admin" },
+                { value: "admin", label: "Administrator" },
               ]}
             />
           )}

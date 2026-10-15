@@ -17,7 +17,7 @@ const NAV = [
     icon: LuLayoutDashboard,
     exact: true,
   },
-  { to: AdminRoutes.Users, label: "Cursanți", icon: LuUsers, exact: false },
+  { to: AdminRoutes.Users, label: "Users", icon: LuUsers, exact: false },
   {
     to: AdminRoutes.Knowledge,
     label: "Documente",

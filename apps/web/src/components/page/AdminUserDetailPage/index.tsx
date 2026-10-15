@@ -113,7 +113,7 @@ export const AdminUserDetailPage: FC<Props> = ({
     return (
       <>
         <PageHeader
-          title="Cursant"
+          title="Utilizator"
           right={loadFailure && <BackButton onBack={onBack} />}
         />
         {loadFailure ? (
